@@ -1,0 +1,13 @@
+###
+
+GET http://localhost:8080/api/category4575/4574 HTTP/1.1
+Accept: application/json
+X-CustomHeader: custom header
+A: a1
+B: b1
+host: localhost:8080
+
+this must be body
+
+###
+GET http://localhost:8080/api/category4574/4574?id=1&tag=auto HTTP/1.1
