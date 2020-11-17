@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gholib/http/pkg/banners"
 )
@@ -96,11 +97,11 @@ func (s *Server) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleSaveBanner(w http.ResponseWriter, r *http.Request) {
 
 	//получаем данные из параметра запроса
-	idP := r.URL.Query().Get("id")
-	title := r.URL.Query().Get("title")
-	content := r.URL.Query().Get("content")
-	button := r.URL.Query().Get("button")
-	link := r.URL.Query().Get("link")
+	idP := r.PostFormValue("id")
+	title := r.PostFormValue("title")
+	content := r.PostFormValue("content")
+	button := r.PostFormValue("button")
+	link := r.PostFormValue("link")
 
 	id, err := strconv.ParseInt(idP, 10, 64)
 
@@ -124,23 +125,28 @@ func (s *Server) handleSaveBanner(w http.ResponseWriter, r *http.Request) {
 		Link:    link,
 	}
 
-	banner, err := s.bannerSvc.Save(r.Context(), item)
+	file, fileHeader, err := r.FormFile("image")
+
+	if err == nil {
+		var name = strings.Split(fileHeader.Filename, ".")
+		item.Image = name[len(name)-1]
+	}
+
+	banner, err := s.bannerSvc.Save(r.Context(), item, file)
 
 	if err != nil {
 		log.Print(err)
+
 		errorWriter(w, http.StatusInternalServerError)
 		return
 	}
-
 	data, err := json.Marshal(banner)
-
 	if err != nil {
 		log.Print(err)
 
 		errorWriter(w, http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
